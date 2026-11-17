@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pro Bulk IPTC & XMP Metadata Embedder Studio</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- PapaParse for CSV & JSZip for ZIP generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background-color: #0b1120;
+      color: #f1f5f9;
+    }
+    .drop-active {
+      border-color: #38bdf8 !important;
+      background-color: rgba(56, 189, 248, 0.08) !important;
+    }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 hidden transform transition-all duration-300 translate-y-4 opacity-0">
+    <div class="bg-slate-800 border border-slate-700 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3">
+      <span id="toastIcon" class="text-lg">✅</span>
+      <span id="toastMsg" class="text-sm font-medium"></span>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <div class="max-w-6xl w-full mx-auto px-4 py-8">
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-6 border-b border-slate-800">
+      <div>
+        <div class="flex items-center gap-2.5">
+          <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-emerald-500 text-white font-bold shadow-lg">⚡</span>
+          <h1 class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 via-cyan-300 to-emerald-400 bg-clip-text text-transparent">
+            Pro Multi-Format Metadata Embedder Studio
+          </h1>
+        </div>
+        <p class="text-slate-400 text-sm mt-1">
+          JPG, PNG, SVG, EPS ও WebP-তে সরাসরি <strong class="text-slate-200">Adobe XMP</strong> ও <strong class="text-slate-200">Binary IPTC</strong> এমবেড করুন — ১০০% ব্রাউজারে, আসল ফরম্যাট অক্ষুণ্ণ রেখে।
+        </p>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2.5">
+        <button id="runSelfTestBtn" class="px-3.5 py-2 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-700/60 text-xs font-semibold text-emerald-300 transition flex items-center gap-2 cursor-pointer">
+          <span>🧪</span> সিস্টেম টেস্ট করুন
+        </button>
+        <button id="downloadSampleCsvBtn" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 transition flex items-center gap-2 cursor-pointer">
+          <span>📥</span> Sample CSV
+        </button>
+        <button id="resetAllBtn" class="px-3.5 py-2 rounded-xl bg-rose-950/50 hover:bg-rose-900/70 border border-rose-800/60 text-xs font-medium text-rose-300 transition flex items-center gap-2 cursor-pointer">
+          <span>🔄</span> রিসেট
+        </button>
+      </div>
+    </header>
+
+    <!-- Upload Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+      <!-- Card 1: Image Folder / Files -->
+      <div id="imageDropZone" class="bg-slate-900/80 border-2 border-dashed border-slate-700 rounded-2xl p-6 text-center transition hover:border-blue-500/70 flex flex-col items-center justify-center">
+        <div class="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-2xl mb-3">🖼️</div>
+        <h2 class="text-lg font-semibold text-white">১. ইমেজ বা ভেক্টর ফোল্ডার দিন</h2>
+        <p class="text-xs text-slate-400 mt-1 mb-4">সাপোর্টেড: JPG, PNG, SVG, EPS, WEBP, TIFF, AVIF, BMP</p>
+        <div class="flex flex-wrap justify-center gap-2.5">
+          <label for="folderInput" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold cursor-pointer transition shadow-md shadow-blue-950/50">
+            📁 ফোল্ডার সিলেক্ট করুন
+          </label>
+          <label for="filesInput" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-sm font-medium cursor-pointer transition">
+            📄 একাধিক ফাইল বাছাই
+          </label>
+        </div>
+        <input type="file" id="folderInput" webkitdirectory directory multiple class="hidden" />
+        <input type="file" id="filesInput" accept="image/*,.eps,.svg,.ai" multiple class="hidden" />
+        <div id="imageStatusBadge" class="mt-3"></div>
+      </div>
+
+      <!-- Card 2: CSV Metadata -->
+      <div id="csvDropZone" class="bg-slate-900/80 border-2 border-dashed border-slate-700 rounded-2xl p-6 text-center transition hover:border-emerald-500/70 flex flex-col items-center justify-center">
+        <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-2xl mb-3">📊</div>
+        <h2 class="text-lg font-semibold text-white">২. মেটাডেটা CSV ফাইল দিন</h2>
+        <p class="text-xs text-slate-400 mt-1 mb-4">যেকোনো কলাম নামের CSV আপলোড করুন অথবা ড্র্যাগ করে ছাড়ুন (.CSV)</p>
+        <label for="csvInput" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold cursor-pointer transition shadow-md shadow-emerald-950/50">
+          📑 CSV ফাইল সিলেক্ট করুন
+        </label>
+        <input type="file" id="csvInput" accept=".csv,text/csv" class="hidden" />
+        <div id="csvStatusBadge" class="mt-3"></div>
+      </div>
+    </div>
+
+    <!-- Column Mapping & Standards Configuration -->
+    <div id="columnMappingPanel" class="hidden mt-6 bg-slate-900 border border-slate-800 rounded-2xl p-5">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 pb-4 border-b border-slate-800">
+        <div>
+          <h3 class="text-base font-semibold text-white flex items-center gap-2">
+            <span>⚙️</span> স্মার্ট কলাম ম্যাপিং ও মেটাডেটা অপশন
+          </h3>
+          <p class="text-xs text-slate-400">আপনার CSV ফাইলের কলামগুলোর সাথে মেটাডেটা ফিল্ড মিলিয়ে নিন</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-4 text-xs">
+          <label class="inline-flex items-center gap-2 cursor-pointer text-slate-300">
+            <input type="checkbox" id="chkXmp" checked class="rounded bg-slate-800 border-slate-600 text-blue-500 focus:ring-0">
+            <span>Adobe XMP (সব ফরম্যাট)</span>
+          </label>
+          <label class="inline-flex items-center gap-2 cursor-pointer text-slate-300">
+            <input type="checkbox" id="chkIptc" checked class="rounded bg-slate-800 border-slate-600 text-emerald-500 focus:ring-0">
+            <span>Binary IPTC-IIM (JPEG)</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">ফাইলের নাম (Filename Column)</label>
+          <select id="mapFileCol" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">টাইটেল (Title Column)</label>
+          <select id="mapTitleCol" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">ডেসক্রিপশন (Description Column)</label>
+          <select id="mapDescCol" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">কিওয়ার্ডস (Keywords Column)</label>
+          <select id="mapKeywordsCol" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"></select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Dashboard -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <span class="text-xs text-slate-400">মোট ফাইল লোড</span>
+        <div id="statTotalImages" class="text-2xl font-bold text-white mt-1">0</div>
+      </div>
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <span class="text-xs text-slate-400">CSV রেকর্ড সংখ্যা</span>
+        <div id="statTotalCsv" class="text-2xl font-bold text-cyan-400 mt-1">0</div>
+      </div>
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <span class="text-xs text-slate-400">ম্যাচ হয়েছে (Ready)</span>
+        <div id="statMatched" class="text-2xl font-bold text-emerald-400 mt-1">0</div>
+      </div>
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <span class="text-xs text-slate-400">ম্যাচ হয়নি</span>
+        <div id="statUnmatched" class="text-2xl font-bold text-amber-400 mt-1">0</div>
+      </div>
+    </div>
+
+    <!-- Filter & Preview Table -->
+    <div id="previewSection" class="hidden mt-6 bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+      <div class="p-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <h3 class="text-sm font-semibold text-white">ফাইল প্রিভিউ ও মেটাডেটা এডিটর</h3>
+          <span id="tableCountBadge" class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">0</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="text" id="searchInput" placeholder="ফাইল বা টাইটেল খুঁজুন..." class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-blue-500" />
+          <select id="filterStatus" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none">
+            <option value="all">সবগুলো দেখুন</option>
+            <option value="matched">শুধু Matched</option>
+            <option value="unmatched">শুধু Unmatched</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto max-h-[420px]">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="bg-slate-950/60 text-slate-400 text-xs uppercase border-b border-slate-800 sticky top-0">
+              <th class="py-3 px-4">প্রিভিউ ও নাম</th>
+              <th class="py-3 px-4">ফরম্যাট</th>
+              <th class="py-3 px-4">স্ট্যাটাস</th>
+              <th class="py-3 px-4">Title</th>
+              <th class="py-3 px-4">Keywords</th>
+              <th class="py-3 px-4 text-right">অ্যাকশন</th>
+            </tr>
+          </thead>
+          <tbody id="previewTableBody" class="divide-y divide-slate-800/70"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div id="progressSection" class="hidden mt-6 bg-slate-900 border border-slate-800 rounded-2xl p-5">
+      <div class="flex justify-between text-xs font-medium mb-2">
+        <span id="progressLabel" class="text-blue-400">মেটাডেটা এমবেড হচ্ছে...</span>
+        <span id="progressPercent" class="text-slate-300">0%</span>
+      </div>
+      <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
+        <div id="progressBarFill" class="h-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all duration-150" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- Primary Generate Button -->
+    <div class="mt-6 flex flex-col sm:flex-row items-center gap-4">
+      <button id="generateZipBtn" disabled class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-base shadow-xl shadow-emerald-950/30 transition flex items-center justify-center gap-2.5 cursor-pointer">
+        <span>⚡</span>
+        <span>সব ফরম্যাটে মেটাডেটা এমবেড করুন এবং ZIP ডাউনলোড করুন</span>
+      </button>
+    </div>
+
+    <div class="mt-4 flex items-center justify-center gap-2 text-xs text-slate-400">
+      <input type="checkbox" id="chkIncludeUnmatched" class="rounded bg-slate-800 border-slate-600 text-blue-500">
+      <label for="chkIncludeUnmatched" class="cursor-pointer">যেসব ফাইলের সাথে CSV মিলেনি সেগুলোকেও মূল অবস্থায় ZIP-এ যুক্ত করুন</label>
+    </div>
+  </div>
+
+  <!-- Edit Metadata Modal -->
+  <div id="editModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <h3 class="text-lg font-bold text-white" id="modalFileName">মেটাডেটা এডিট করুন</h3>
+        <button id="closeModalBtn" class="text-slate-400 hover:text-white text-xl cursor-pointer">✕</button>
+      </div>
+      <div class="mt-4 space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Title (শিরোনাম)</label>
+          <input type="text" id="modalTitleInput" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Description (বিস্তারিত বিবরণ)</label>
+          <textarea id="modalDescInput" rows="3" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"></textarea>
+        </div>
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <label class="font-medium text-slate-400">Keywords (কমা দিয়ে আলাদা করুন)</label>
+            <span id="modalKwCounter" class="text-emerald-400 font-semibold">0 keywords</span>
+          </div>
+          <textarea id="modalKwInput" rows="4" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"></textarea>
+        </div>
+      </div>
+      <div class="mt-6 flex justify-end gap-3">
+        <button id="cancelModalBtn" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium cursor-pointer">বাতিল</button>
+        <button id="saveModalBtn" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold cursor-pointer">সেভ করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Raw XMP / Binary Metadata Inspector Modal -->
+  <div id="inspectModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full p-6 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <span>🔬</span> লাইভ এমবেডেড মেটাডেটা ইন্সপেক্টর
+        </h3>
+        <button id="closeInspectModalBtn" class="text-slate-400 hover:text-white text-xl cursor-pointer">✕</button>
+      </div>
+      <div class="mt-3 text-xs text-emerald-400 font-medium" id="inspectHeaderInfo"></div>
+      <pre id="inspectCodeOutput" class="mt-3 p-4 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 text-xs overflow-x-auto max-h-80 font-mono leading-relaxed"></pre>
+      <div class="mt-5 flex justify-end">
+        <button id="okInspectModalBtn" class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold cursor-pointer">বন্ধ করুন</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  /**
+   * Application State
+   */
+  let loadedImages = [];       // Array of { id, file, format, outputName, normName, thumbUrl, meta }
+  let rawCsvRows = [];         // Parsed CSV objects
+  let csvHeaders = [];         // CSV column headers
+  let activeEditId = null;     // Currently editing image ID in modal
+
+  // DOM References
+  const folderInput = document.getElementById('folderInput');
+  const filesInput = document.getElementById('filesInput');
+  const csvInput = document.getElementById('csvInput');
+  const imageDropZone = document.getElementById('imageDropZone');
+  const csvDropZone = document.getElementById('csvDropZone');
+  const columnMappingPanel = document.getElementById('columnMappingPanel');
+  const previewSection = document.getElementById('previewSection');
+  const previewTableBody = document.getElementById('previewTableBody');
+  const generateZipBtn = document.getElementById('generateZipBtn');
+
+  // Column Selects
+  const mapFileCol = document.getElementById('mapFileCol');
+  const mapTitleCol = document.getElementById('mapTitleCol');
+  const mapDescCol = document.getElementById('mapDescCol');
+  const mapKeywordsCol = document.getElementById('mapKeywordsCol');
+
+  /**
+   * Ensure a completely clean slate on every page load / reload (clears browser bfcache / form state)
+   */
+  function clearAllStateOnLoad() {
+    loadedImages = [];
+    rawCsvRows = [];
+    csvHeaders = [];
+    activeEditId = null;
+    if (folderInput) folderInput.value = '';
+    if (filesInput) filesInput.value = '';
+    if (csvInput) csvInput.value = '';
+    document.getElementById('searchInput').value = '';
+    document.getElementById('filterStatus').value = 'all';
+    document.getElementById('imageStatusBadge').innerHTML = '';
+    document.getElementById('csvStatusBadge').innerHTML = '';
+    columnMappingPanel.classList.add('hidden');
+    previewSection.classList.add('hidden');
+    document.getElementById('progressSection').classList.add('hidden');
+    document.getElementById('statTotalImages').textContent = '0';
+    document.getElementById('statTotalCsv').textContent = '0';
+    document.getElementById('statMatched').textContent = '0';
+    document.getElementById('statUnmatched').textContent = '0';
+    generateZipBtn.disabled = true;
+  }
+
+  window.addEventListener('DOMContentLoaded', clearAllStateOnLoad);
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) clearAllStateOnLoad();
+  });
+
+  /**
+   * Utility: Show Toast Message
+   */
+  let toastTimer = null;
+  function showToast(msg, icon = '✅') {
+    const toast = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = msg;
+    document.getElementById('toastIcon').textContent = icon;
+    toast.classList.remove('hidden');
+    requestAnimationFrame(() => {
+      toast.classList.remove('translate-y-4', 'opacity-0');
+    });
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toast.classList.add('translate-y-4', 'opacity-0');
+      setTimeout(() => toast.classList.add('hidden'), 300);
+    }, 3800);
+  }
+
+  /**
+   * Utility: Normalize filename for reliable cross-format matching
+   */
+  function normalizeFilename(name) {
+    if (!name) return '';
+    const base = String(name).split(/[\\/]/).pop().trim().toLowerCase();
+    return base.replace(/\.(jpe?g|png|webp|svg|eps|ai|tiff?|bmp|gif|avif)$/i, '').trim();
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
+  }
+
+  function escapeXml(str) {
+    return (str || '').replace(/[<>&'"]/g, c => ({
+      '<': '&lt;',
+      '>': '&gt;',
+      '&': '&amp;',
+      '\'': '&apos;',
+      '"': '&quot;'
+    }[c]));
+  }
+
+  /**
+   * Detect Supported File Format
+   */
+  function detectAssetFormat(file) {
+    const name = file.name.toLowerCase();
+    const type = (file.type || '').toLowerCase();
+    if (/\.jpe?g$/i.test(name) || type === 'image/jpeg') return 'JPEG';
+    if (/\.png$/i.test(name) || type === 'image/png') return 'PNG';
+    if (/\.svg$/i.test(name) || type === 'image/svg+xml') return 'SVG';
+    if (/\.eps$/i.test(name) || type === 'application/postscript' || type === 'image/x-eps') return 'EPS';
+    if (/\.webp$/i.test(name) || type === 'image/webp') return 'WEBP';
+    if (/\.(tiff?|bmp|gif|avif|ico)$/i.test(name) || type.startsWith('image/')) return 'OTHER_IMAGE';
+    return null;
+  }
+
+  /**
+   * Handle Image / Vector Files Upload
+   */
+  function handleImageFiles(fileList) {
+    const files = Array.from(fileList || []);
+    const validAssets = [];
+    const formatCounts = {};
+
+    files.forEach(file => {
+      const fmt = detectAssetFormat(file);
+      if (fmt) {
+        validAssets.push({ file, format: fmt });
+        formatCounts[fmt] = (formatCounts[fmt] || 0) + 1;
+      }
+    });
+
+    if (validAssets.length === 0) {
+      showToast('কোনো সাপোর্টেড ইমেজ বা ভেক্টর ফাইল পাওয়া যায়নি!', '⚠️');
+      return;
+    }
+
+    // Revoke previous object URLs to free memory
+    loadedImages.forEach(item => {
+      if (item.thumbUrl && item.thumbUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(item.thumbUrl);
+      }
+    });
+
+    loadedImages = validAssets.map(({ file, format }, idx) => {
+      const outputName = format === 'OTHER_IMAGE'
+        ? file.name.replace(/\.[^.]+$/, '') + '.jpg'
+        : file.name;
+
+      let thumbUrl = '';
+      if (format === 'JPEG' || format === 'PNG' || format === 'SVG' || format === 'WEBP' || format === 'OTHER_IMAGE') {
+        thumbUrl = URL.createObjectURL(file);
+      } else {
+        thumbUrl = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+          `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><rect width="80" height="80" rx="12" fill="#1e293b"/><text x="40" y="45" font-family="sans-serif" font-size="14" font-weight="bold" fill="#38bdf8" text-anchor="middle">${format}</text></svg>`
+        );
+      }
+
+      return {
+        id: `img_${idx}_${Date.now()}`,
+        file,
+        format,
+        outputName,
+        normName: normalizeFilename(file.name),
+        thumbUrl,
+        meta: null
+      };
+    });
+
+    const summaryBadges = Object.entries(formatCounts)
+      .map(([fmt, cnt]) => `${cnt} ${fmt}`)
+      .join(' • ');
+
+    document.getElementById('imageStatusBadge').innerHTML = `
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/15 text-blue-300 border border-blue-500/30">
+        ✅ মোট ${loadedImages.length} টি ফাইল লোড হয়েছে (${summaryBadges})
+      </span>
+    `;
+
+    applyCsvMappingToImages();
+    showToast(`${loadedImages.length} টি ফাইল (${summaryBadges}) লোড হয়েছে।`, '🖼️');
+  }
+
+  folderInput.addEventListener('change', e => handleImageFiles(e.target.files));
+  filesInput.addEventListener('change', e => handleImageFiles(e.target.files));
+
+  /**
+   * Handle CSV File Upload
+   */
+  function handleCsvFile(file) {
+    if (!file) return;
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: function(results) {
+        if (!results.data || results.data.length === 0) {
+          showToast('CSV ফাইলটি খালি অথবা সঠিক ফরম্যাটে নেই!', '❌');
+          return;
+        }
+        rawCsvRows = results.data;
+        csvHeaders = results.meta.fields || Object.keys(rawCsvRows[0]);
+
+        populateColumnSelects(csvHeaders);
+        columnMappingPanel.classList.remove('hidden');
+
+        document.getElementById('csvStatusBadge').innerHTML = `
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+            ✅ ${rawCsvRows.length} টি রো লোড হয়েছে (${escapeHtml(file.name)})
+          </span>
+        `;
+
+        applyCsvMappingToImages();
+        showToast(`CSV থেকে ${rawCsvRows.length} টি রেকর্ড লোড হয়েছে।`, '📊');
+      },
+      error: function(err) {
+        showToast('CSV পড়তে সমস্যা হয়েছে: ' + err.message, '❌');
+      }
+    });
+  }
+
+  csvInput.addEventListener('change', e => handleCsvFile(e.target.files[0]));
+
+  /**
+   * Drag & Drop Support
+   */
+  function setupDropZone(zone, callback) {
+    ['dragenter', 'dragover'].forEach(evt => {
+      zone.addEventListener(evt, e => {
+        e.preventDefault();
+        zone.classList.add('drop-active');
+      });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+      zone.addEventListener(evt, e => {
+        e.preventDefault();
+        zone.classList.remove('drop-active');
+      });
+    });
+    zone.addEventListener('drop', e => {
+      if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+        callback(e.dataTransfer.files);
+      }
+    });
+  }
+
+  setupDropZone(imageDropZone, files => handleImageFiles(files));
+  setupDropZone(csvDropZone, files => handleCsvFile(files[0]));
+
+  /**
+   * Auto-Detect CSV Columns & Populate Dropdowns
+   */
+  function populateColumnSelects(headers) {
+    const selects = [mapFileCol, mapTitleCol, mapDescCol, mapKeywordsCol];
+    selects.forEach(sel => {
+      sel.innerHTML = `<option value="">-- নির্বাচন করুন --</option>` +
+        headers.map(h => `<option value="${escapeHtml(h)}">${escapeHtml(h)}</option>`).join('');
+    });
+
+    const findMatch = (patterns) => headers.find(h => patterns.some(rx => rx.test(h.trim()))) || '';
+
+    mapFileCol.value = findMatch([/^(file|filename|file_name|sourcefile|image|asset|name)$/i]) || headers[0] || '';
+    mapTitleCol.value = findMatch([/^(title|asset_title|objectname|headline|name)$/i]);
+    mapDescCol.value = findMatch([/^(description|desc|caption|abstract|summary)$/i]);
+    mapKeywordsCol.value = findMatch([/^(keywords|keyword|tags|tag|subject)$/i]);
+  }
+
+  [mapFileCol, mapTitleCol, mapDescCol, mapKeywordsCol].forEach(sel => {
+    sel.addEventListener('change', applyCsvMappingToImages);
+  });
+
+  /**
+   * Match CSV Records to Loaded Files
+   */
+  function applyCsvMappingToImages() {
+    const fileCol = mapFileCol.value;
+    const titleCol = mapTitleCol.value;
+    const descCol = mapDescCol.value;
+    const kwCol = mapKeywordsCol.value;
+
+    const lookupMap = new Map();
+    if (rawCsvRows.length > 0 && fileCol) {
+      rawCsvRows.forEach(row => {
+        const rawName = row[fileCol];
+        if (rawName) {
+          const norm = normalizeFilename(rawName);
+          const title = titleCol ? (row[titleCol] || '').trim() : '';
+          const desc = descCol ? (row[descCol] || '').trim() : '';
+          const keywords = kwCol ? (row[kwCol] || '').trim() : '';
+          lookupMap.set(norm, {
+            title: title || desc,
+            description: desc || title,
+            keywords
+          });
+        }
+      });
+    }
+
+    let matchedCount = 0;
+    loadedImages.forEach(img => {
+      if (lookupMap.has(img.normName)) {
+        img.meta = { ...lookupMap.get(img.normName) };
+        matchedCount++;
+      } else if (img.meta && img.meta.manual) {
+        matchedCount++;
+      } else {
+        img.meta = null;
+      }
+    });
+
+    document.getElementById('statTotalImages').textContent = loadedImages.length;
+    document.getElementById('statTotalCsv').textContent = rawCsvRows.length;
+    document.getElementById('statMatched').textContent = matchedCount;
+    document.getElementById('statUnmatched').textContent = loadedImages.length - matchedCount;
+
+    previewSection.classList.toggle('hidden', loadedImages.length === 0);
+    generateZipBtn.disabled = matchedCount === 0;
+
+    renderPreviewTable();
+  }
+
+  /**
+   * Render Preview Table with Search & Status Filter
+   */
+  function renderPreviewTable() {
+    const query = (document.getElementById('searchInput').value || '').toLowerCase();
+    const filter = document.getElementById('filterStatus').value;
+
+    const filtered = loadedImages.filter(item => {
+      const isMatched = Boolean(item.meta);
+      if (filter === 'matched' && !isMatched) return false;
+      if (filter === 'unmatched' && isMatched) return false;
+      if (query) {
+        const inName = item.outputName.toLowerCase().includes(query);
+        const inTitle = item.meta && item.meta.title.toLowerCase().includes(query);
+        return inName || inTitle;
+      }
+      return true;
+    });
+
+    document.getElementById('tableCountBadge').textContent = `${filtered.length} টি ফাইল`;
+
+    const badgeColors = {
+      JPEG: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
+      PNG: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
+      SVG: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+      EPS: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+      WEBP: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30',
+      OTHER_IMAGE: 'bg-slate-700 text-slate-300 border-slate-600'
+    };
+
+    previewTableBody.innerHTML = filtered.slice(0, 200).map(item => {
+      const kwCount = item.meta && item.meta.keywords
+        ? item.meta.keywords.split(',').map(k => k.trim()).filter(Boolean).length
+        : 0;
+      const fmtLabel = item.format === 'OTHER_IMAGE' ? 'JPG (Conv)' : item.format;
+
+      return `
+        <tr class="hover:bg-slate-800/40 transition">
+          <td class="py-3 px-4">
+            <div class="flex items-center gap-3">
+              <img src="${item.thumbUrl}" alt="" class="w-10 h-10 rounded-lg object-cover bg-slate-800 border border-slate-700 shrink-0" />
+              <div class="min-w-0">
+                <div class="font-medium text-slate-200 truncate max-w-[180px]" title="${escapeHtml(item.outputName)}">${escapeHtml(item.outputName)}</div>
+                <div class="text-[11px] text-slate-500">${(item.file.size / 1024).toFixed(1)} KB</div>
+              </div>
+            </div>
+          </td>
+          <td class="py-3 px-4">
+            <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold border ${badgeColors[item.format] || badgeColors.OTHER_IMAGE}">${fmtLabel}</span>
+          </td>
+          <td class="py-3 px-4">
+            ${item.meta
+              ? `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">✓ Matched</span>`
+              : `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/15 text-amber-400 border border-amber-500/30">No CSV</span>`
+            }
+          </td>
+          <td class="py-3 px-4 text-slate-300 max-w-[220px] truncate" title="${item.meta ? escapeHtml(item.meta.title) : ''}">
+            ${item.meta ? escapeHtml(item.meta.title) : '<span class="text-slate-600">—</span>'}
+          </td>
+          <td class="py-3 px-4 text-slate-400 text-xs">
+            ${item.meta ? `${kwCount} keywords` : '—'}
+          </td>
+          <td class="py-3 px-4 text-right">
+            <div class="inline-flex items-center gap-1.5">
+              <button onclick="inspectEmbeddedMetadata('${item.id}')" title="ফাইলের ভেতরে এমবেড হওয়া আসল XMP কোড দেখুন" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-emerald-600 text-slate-200 hover:text-white text-xs font-medium transition cursor-pointer">
+                🔍 Inspect
+              </button>
+              <button onclick="openEditModal('${item.id}')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-blue-600 text-slate-200 hover:text-white text-xs font-medium transition cursor-pointer">
+                ✏️ Edit
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  document.getElementById('searchInput').addEventListener('input', renderPreviewTable);
+  document.getElementById('filterStatus').addEventListener('change', renderPreviewTable);
+
+  /**
+   * Edit Metadata Modal Handlers
+   */
+  window.openEditModal = function(id) {
+    const item = loadedImages.find(i => i.id === id);
+    if (!item) return;
+    activeEditId = id;
+    document.getElementById('modalFileName').textContent = `এডিট: ${item.outputName}`;
+    document.getElementById('modalTitleInput').value = item.meta ? item.meta.title : '';
+    document.getElementById('modalDescInput').value = item.meta ? item.meta.description : '';
+    document.getElementById('modalKwInput').value = item.meta ? item.meta.keywords : '';
+    updateModalKwCount();
+    document.getElementById('editModal').classList.remove('hidden');
+  };
+
+  function updateModalKwCount() {
+    const raw = document.getElementById('modalKwInput').value;
+    const cnt = raw.split(',').map(k => k.trim()).filter(Boolean).length;
+    document.getElementById('modalKwCounter').textContent = `${cnt} keywords`;
+  }
+
+  document.getElementById('modalKwInput').addEventListener('input', updateModalKwCount);
+  document.getElementById('closeModalBtn').addEventListener('click', () => document.getElementById('editModal').classList.add('hidden'));
+  document.getElementById('cancelModalBtn').addEventListener('click', () => document.getElementById('editModal').classList.add('hidden'));
+
+  document.getElementById('saveModalBtn').addEventListener('click', () => {
+    const item = loadedImages.find(i => i.id === activeEditId);
+    if (item) {
+      const title = document.getElementById('modalTitleInput').value.trim();
+      const description = document.getElementById('modalDescInput').value.trim();
+      const keywords = document.getElementById('modalKwInput').value.trim();
+      item.meta = { title, description: description || title, keywords, manual: true };
+
+      const matchedCount = loadedImages.filter(i => Boolean(i.meta)).length;
+      document.getElementById('statMatched').textContent = matchedCount;
+      document.getElementById('statUnmatched').textContent = loadedImages.length - matchedCount;
+      generateZipBtn.disabled = matchedCount === 0;
+      renderPreviewTable();
+      showToast('মেটাডেটা আপডেট করা হয়েছে।', '💾');
+    }
+    document.getElementById('editModal').classList.add('hidden');
+  });
+
+  /**
+   * Live Metadata Inspector: Generates real binary output for a single file & verifies embedded XMP/IPTC
+   */
+  window.inspectEmbeddedMetadata = async function(id) {
+    const item = loadedImages.find(i => i.id === id);
+    if (!item) return;
+    if (!item.meta) {
+      showToast('এই ফাইলে এখনো কোনো মেটাডেটা যুক্ত হয়নি। আগে CSV ম্যাচ করুন বা Edit করুন।', '⚠️');
+      return;
+    }
+
+    try {
+      const origBuffer = await item.file.arrayBuffer();
+      let finalBytes;
+      if (item.format === 'JPEG') finalBytes = embedMetadataIntoJpeg(origBuffer, item.meta, true, true);
+      else if (item.format === 'PNG') finalBytes = embedMetadataIntoPng(origBuffer, item.meta);
+      else if (item.format === 'SVG') finalBytes = embedMetadataIntoSvg(origBuffer, item.meta);
+      else if (item.format === 'EPS') finalBytes = embedMetadataIntoEps(origBuffer, item.meta);
+      else if (item.format === 'WEBP') finalBytes = await embedMetadataIntoWebp(item.file, origBuffer, item.meta);
+      else {
+        const jpegBuf = await convertImageToJpegBuffer(item.file);
+        finalBytes = embedMetadataIntoJpeg(jpegBuf, item.meta, true, true);
+      }
+
+      const decoded = new TextDecoder('utf-8', { fatal: false }).decode(finalBytes);
+      const xmpMatch = decoded.match(/<x:xmpmeta[\s\S]*?<\/x:xmpmeta>/);
+      const hasIptc = new TextDecoder('latin1').decode(finalBytes).includes('Photoshop 3.0');
+
+      document.getElementById('inspectHeaderInfo').textContent =
+        `ফাইল: ${item.outputName} (${(finalBytes.length / 1024).toFixed(1)} KB) | XMP: ${xmpMatch ? '✅ Verified' : '❌'} | Binary IPTC: ${hasIptc ? '✅ Verified' : 'N/A (' + item.format + ')'}`;
+      document.getElementById('inspectCodeOutput').textContent = xmpMatch ? xmpMatch[0] : 'XMP ব্লক পাওয়া যায়নি।';
+      document.getElementById('inspectModal').classList.remove('hidden');
+    } catch (err) {
+      showToast('ইন্সপেক্ট এরর: ' + err.message, '❌');
+    }
+  };
+
+  document.getElementById('closeInspectModalBtn').addEventListener('click', () => document.getElementById('inspectModal').classList.add('hidden'));
+  document.getElementById('okInspectModalBtn').addEventListener('click', () => document.getElementById('inspectModal').classList.add('hidden'));
+
+  /**
+   * Build Standard Adobe XMP Packet (Universal for JPEG, PNG, SVG, EPS, WebP)
+   */
+  function buildXmpPacket(meta) {
+    const keywords = (meta.keywords || '')
+      .split(',')
+      .map(k => k.trim())
+      .filter(Boolean);
+
+    const kwXml = keywords.map(k => `          <rdf:li>${escapeXml(k)}</rdf:li>`).join('\n');
+    const safeTitle = escapeXml(meta.title);
+    const safeDesc = escapeXml(meta.description || meta.title);
+
+    return `<?xpacket begin="\uFEFF" id="W5M0MpCehiHzreSzNTczkc9d"?>
+<x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="Adobe XMP Core 5.6-c140">
+  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+    <rdf:Description rdf:about=""
+      xmlns:dc="http://purl.org/dc/elements/1.1/"
+      xmlns:photoshop="http://ns.adobe.com/photoshop/1.0/"
+      xmlns:xmp="http://ns.adobe.com/xap/1.0/"
+      xmlns:Iptc4xmpCore="http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/">
+      <dc:title>
+        <rdf:Alt>
+          <rdf:li xml:lang="x-default">${safeTitle}</rdf:li>
+        </rdf:Alt>
+      </dc:title>
+      <dc:description>
+        <rdf:Alt>
+          <rdf:li xml:lang="x-default">${safeDesc}</rdf:li>
+        </rdf:Alt>
+      </dc:description>
+      <photoshop:Headline>${safeTitle}</photoshop:Headline>
+      <dc:subject>
+        <rdf:Bag>
+${kwXml}
+        </rdf:Bag>
+      </dc:subject>
+    </rdf:Description>
+  </rdf:RDF>
+</x:xmpmeta>
+<?xpacket end="w"?>`;
+  }
+
+  /**
+   * Build Binary IPTC-IIM APP13 Segment (Photoshop 3.0 8BIM 0x0404)
+   */
+  function buildIptcApp13Segment(meta) {
+    const encoder = new TextEncoder();
+    const records = [];
+
+    function pushIptcTag(recordNum, datasetNum, textValue) {
+      if (!textValue) return;
+      const bytes = encoder.encode(textValue);
+      const len = bytes.length;
+      if (len > 32767) return;
+      const header = new Uint8Array([0x1C, recordNum, datasetNum, (len >> 8) & 0xFF, len & 0xFF]);
+      records.push(header, bytes);
+    }
+
+    // Coded Character Set = UTF-8 (1:90 -> ESC % G)
+    records.push(new Uint8Array([0x1C, 0x01, 0x5A, 0x00, 0x03, 0x1B, 0x25, 0x47]));
+    // Application Record Version (2:00 -> 4)
+    records.push(new Uint8Array([0x1C, 0x02, 0x00, 0x00, 0x02, 0x00, 0x04]));
+
+    pushIptcTag(2, 5, (meta.title || '').slice(0, 64));           // 2:05 Object Name (Title)
+    pushIptcTag(2, 105, (meta.title || '').slice(0, 256));        // 2:105 Headline
+    pushIptcTag(2, 120, (meta.description || meta.title || '').slice(0, 2000)); // 2:120 Caption/Abstract
+
+    const keywords = (meta.keywords || '').split(',').map(k => k.trim()).filter(Boolean);
+    keywords.forEach(kw => {
+      pushIptcTag(2, 25, kw.slice(0, 64));                        // 2:25 Keywords (Repeatable)
+    });
+
+    const iptcPayloadLen = records.reduce((s, r) => s + r.length, 0);
+    const paddedIptcLen = iptcPayloadLen % 2 === 0 ? iptcPayloadLen : iptcPayloadLen + 1;
+
+    const psHeader = encoder.encode("Photoshop 3.0\0");
+    const bimHeader = new Uint8Array([
+      0x38, 0x42, 0x49, 0x4D, // '8BIM'
+      0x04, 0x04,             // IPTC-NAA record ID
+      0x00, 0x00,             // Empty Pascal string (padded to even)
+      (iptcPayloadLen >> 24) & 0xFF,
+      (iptcPayloadLen >> 16) & 0xFF,
+      (iptcPayloadLen >> 8) & 0xFF,
+      iptcPayloadLen & 0xFF
+    ]);
+
+    const totalSegmentDataLen = 2 + psHeader.length + bimHeader.length + paddedIptcLen;
+    const seg = new Uint8Array(2 + totalSegmentDataLen);
+    seg[0] = 0xFF;
+    seg[1] = 0xED; // APP13
+    seg[2] = (totalSegmentDataLen >> 8) & 0xFF;
+    seg[3] = totalSegmentDataLen & 0xFF;
+
+    let pos = 4;
+    seg.set(psHeader, pos); pos += psHeader.length;
+    seg.set(bimHeader, pos); pos += bimHeader.length;
+    for (const r of records) {
+      seg.set(r, pos);
+      pos += r.length;
+    }
+    if (iptcPayloadLen % 2 !== 0) {
+      seg[pos] = 0x00; // Mandatory even-byte padding
+    }
+    return seg;
+  }
+
+  /**
+   * 1. JPEG Engine: Injects XMP (APP1) and IPTC-IIM (APP13) preserving JFIF/EXIF headers
+   */
+  function embedMetadataIntoJpeg(arrayBuffer, meta, includeXmp = true, includeIptc = true) {
+    const original = new Uint8Array(arrayBuffer);
+    if (original[0] !== 0xFF || original[1] !== 0xD8) {
+      throw new Error('Invalid JPEG header');
+    }
+
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder('latin1');
+    const newSegments = [];
+
+    if (includeXmp) {
+      const nsBytes = encoder.encode("http://ns.adobe.com/xap/1.0/\0");
+      const xmpBytes = encoder.encode(buildXmpPacket(meta));
+      const app1Len = 2 + nsBytes.length + xmpBytes.length;
+      if (app1Len <= 65535) {
+        const app1 = new Uint8Array(2 + app1Len);
+        app1[0] = 0xFF; app1[1] = 0xE1;
+        app1[2] = (app1Len >> 8) & 0xFF;
+        app1[3] = app1Len & 0xFF;
+        app1.set(nsBytes, 4);
+        app1.set(xmpBytes, 4 + nsBytes.length);
+        newSegments.push(app1);
+      }
+    }
+
+    if (includeIptc) {
+      newSegments.push(buildIptcApp13Segment(meta));
+    }
+
+    const headChunks = [original.slice(0, 2)]; // SOI
+    const bodyChunks = [];
+    let offset = 2;
+
+    while (offset < original.length) {
+      if (original[offset] !== 0xFF) {
+        bodyChunks.push(original.slice(offset));
+        break;
+      }
+
+      const marker = original[offset + 1];
+      if (marker === 0xFF) { offset++; continue; }
+
+      if (marker === 0xDA || marker === 0xD9) {
+        bodyChunks.push(original.slice(offset));
+        break;
+      }
+
+      if ((marker >= 0xD0 && marker <= 0xD7) || marker === 0x01) {
+        bodyChunks.push(original.slice(offset, offset + 2));
+        offset += 2;
+        continue;
+      }
+
+      const segLen = (original[offset + 2] << 8) | original[offset + 3];
+      const segEnd = offset + 2 + segLen;
+      if (segEnd > original.length) {
+        bodyChunks.push(original.slice(offset));
+        break;
+      }
+
+      let skipOld = false;
+      let isPrimaryHeader = false;
+
+      if (marker === 0xE0) {
+        isPrimaryHeader = true; // JFIF
+      } else if (marker === 0xE1 && segLen > 31) {
+        const sig = decoder.decode(original.slice(offset + 4, offset + 33));
+        if (sig === "http://ns.adobe.com/xap/1.0/\0") {
+          skipOld = includeXmp;
+        } else if (sig.startsWith("Exif\0\0")) {
+          isPrimaryHeader = true;
+        }
+      } else if (marker === 0xED && segLen > 18) {
+        const sig = decoder.decode(original.slice(offset + 4, offset + 18));
+        if (sig === "Photoshop 3.0\0") {
+          skipOld = includeIptc;
+        }
+      }
+
+      if (!skipOld) {
+        if (isPrimaryHeader && bodyChunks.length === 0) {
+          headChunks.push(original.slice(offset, segEnd));
+        } else {
+          bodyChunks.push(original.slice(offset, segEnd));
+        }
+      }
+      offset = segEnd;
+    }
+
+    const allChunks = [...headChunks, ...newSegments, ...bodyChunks];
+    const totalSize = allChunks.reduce((acc, c) => acc + c.length, 0);
+    const out = new Uint8Array(totalSize);
+    let p = 0;
+    for (const c of allChunks) {
+      out.set(c, p);
+      p += c.length;
+    }
+    return out;
+  }
+
+  /**
+   * 2. PNG Engine: Injects Official `iTXt` XMP Chunk with Valid CRC32 Checksum
+   */
+  const crcTable = (() => {
+    const t = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) {
+      let c = n;
+      for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      t[n] = c;
+    }
+    return t;
+  })();
+
+  function crc32(bytes) {
+    let crc = 0xFFFFFFFF;
+    for (let i = 0; i < bytes.length; i++) {
+      crc = crcTable[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+    }
+    return (crc ^ 0xFFFFFFFF) >>> 0;
+  }
+
+  function createPngChunk(typeStr, dataBytes) {
+    const encoder = new TextEncoder();
+    const typeBytes = encoder.encode(typeStr);
+    const len = dataBytes.length;
+    const chunk = new Uint8Array(12 + len);
+    const view = new DataView(chunk.buffer);
+
+    view.setUint32(0, len, false);
+    chunk.set(typeBytes, 4);
+    chunk.set(dataBytes, 8);
+
+    const crcInput = new Uint8Array(4 + len);
+    crcInput.set(typeBytes, 0);
+    crcInput.set(dataBytes, 4);
+    view.setUint32(8 + len, crc32(crcInput), false);
+    return chunk;
+  }
+
+  function embedMetadataIntoPng(arrayBuffer, meta) {
+    const orig = new Uint8Array(arrayBuffer);
+    const pngSig = [137, 80, 78, 71, 13, 10, 26, 10];
+    for (let i = 0; i < 8; i++) {
+      if (orig[i] !== pngSig[i]) throw new Error('Invalid PNG signature');
+    }
+
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder('latin1');
+    const xmpBytes = encoder.encode(buildXmpPacket(meta));
+
+    // iTXt format: Keyword ("XML:com.adobe.xmp\0") + CompFlag(0) + CompMethod(0) + LangTag("\0") + TransKey("\0") + Text
+    const keywordPrefix = encoder.encode("XML:com.adobe.xmp\0\0\0\0\0");
+    const itxtPayload = new Uint8Array(keywordPrefix.length + xmpBytes.length);
+    itxtPayload.set(keywordPrefix, 0);
+    itxtPayload.set(xmpBytes, keywordPrefix.length);
+    const newItxtChunk = createPngChunk('iTXt', itxtPayload);
+
+    const chunks = [orig.slice(0, 8)];
+    let offset = 8;
+    const view = new DataView(orig.buffer);
+
+    while (offset + 12 <= orig.length) {
+      const len = view.getUint32(offset, false);
+      const type = decoder.decode(orig.slice(offset + 4, offset + 8));
+      const totalChunkLen = 12 + len;
+      if (offset + totalChunkLen > orig.length) break;
+
+      const chunkSlice = orig.slice(offset, offset + totalChunkLen);
+
+      if (type === 'IHDR') {
+        chunks.push(chunkSlice);
+        chunks.push(newItxtChunk);
+      } else if (type === 'iTXt') {
+        const peek = decoder.decode(orig.slice(offset + 8, Math.min(offset + 28, offset + 8 + len)));
+        if (!peek.startsWith('XML:com.adobe.xmp')) {
+          chunks.push(chunkSlice);
+        }
+      } else {
+        chunks.push(chunkSlice);
+      }
+      offset += totalChunkLen;
+    }
+
+    const totalSize = chunks.reduce((s, c) => s + c.length, 0);
+    const out = new Uint8Array(totalSize);
+    let pos = 0;
+    for (const c of chunks) { out.set(c, pos); pos += c.length; }
+    return out;
+  }
+
+  /**
+   * 3. SVG Vector Engine: Injects Standard Dublin Core & XMP <metadata> Block
+   */
+  function embedMetadataIntoSvg(arrayBuffer, meta) {
+    let svgText = new TextDecoder('utf-8').decode(arrayBuffer);
+    const xmpBlock = buildXmpPacket(meta);
+    const metaTag = `\n<metadata id="microstock_xmp_metadata">\n${xmpBlock}\n</metadata>\n`;
+
+    // Remove existing microstock metadata block if re-running
+    svgText = svgText.replace(/<metadata id="microstock_xmp_metadata">[\s\S]*?<\/metadata>\s*/gi, '');
+
+    if (/<svg[^>]*>/i.test(svgText)) {
+      svgText = svgText.replace(/(<svg[^>]*>)/i, `$1${metaTag}`);
+    } else {
+      svgText = metaTag + svgText;
+    }
+    return new TextEncoder().encode(svgText);
+  }
+
+  /**
+   * 4. EPS Vector Engine: Injects Adobe XMP Packet into PostScript Header
+   */
+  function embedMetadataIntoEps(arrayBuffer, meta) {
+    const origBytes = new Uint8Array(arrayBuffer);
+    const latinStr = new TextDecoder('latin1').decode(origBytes);
+    const xmpXml = buildXmpPacket(meta);
+
+    const xmpSection =
+      `\n%ADO_ContainsXMP: MainFirst\n` +
+      `%%BeginDocument: Adobe_XMP_Metadata\n` +
+      `${xmpXml}\n` +
+      `%%EndDocument\n`;
+
+    let updatedStr = latinStr;
+    if (updatedStr.includes('%%EndComments')) {
+      updatedStr = updatedStr.replace('%%EndComments', `%%EndComments${xmpSection}`);
+    } else {
+      updatedStr = updatedStr.replace(/^([^\r\n]*[\r\n]+)/, `$1${xmpSection}`);
+    }
+
+    return new TextEncoder().encode(updatedStr);
+  }
+
+  /**
+   * 5. WebP Engine: Injects RIFF 'XMP ' Chunk (or upgrades VP8/VP8L to VP8X Extended WebP)
+   */
+  async function embedMetadataIntoWebp(file, arrayBuffer, meta) {
+    const orig = new Uint8Array(arrayBuffer);
+    const decoder = new TextDecoder('latin1');
+    const encoder = new TextEncoder();
+
+    if (orig.length < 16 || decoder.decode(orig.slice(0, 4)) !== 'RIFF' || decoder.decode(orig.slice(8, 12)) !== 'WEBP') {
+      throw new Error('Invalid WebP container');
+    }
+
+    const xmpBytes = encoder.encode(buildXmpPacket(meta));
+    const padByte = xmpBytes.length % 2 === 1 ? new Uint8Array([0]) : new Uint8Array(0);
+    const xmpChunkHeader = new Uint8Array(8);
+    xmpChunkHeader.set(encoder.encode('XMP '), 0);
+    new DataView(xmpChunkHeader.buffer).setUint32(4, xmpBytes.length, true);
+
+    const firstFourCC = decoder.decode(orig.slice(12, 16));
+    const bodyParts = [];
+    let offset = 12;
+    const view = new DataView(orig.buffer);
+
+    if (firstFourCC !== 'VP8X') {
+      const imgBitmap = await createImageBitmap(file);
+      const w = imgBitmap.width - 1;
+      const h = imgBitmap.height - 1;
+      imgBitmap.close();
+
+      const vp8xChunk = new Uint8Array(18);
+      vp8xChunk.set(encoder.encode('VP8X'), 0);
+      new DataView(vp8xChunk.buffer).setUint32(4, 10, true);
+      vp8xChunk[8] = 0x04; // Bit 2 = XMP metadata flag
+      vp8xChunk[12] = w & 0xFF; vp8xChunk[13] = (w >> 8) & 0xFF; vp8xChunk[14] = (w >> 16) & 0xFF;
+      vp8xChunk[15] = h & 0xFF; vp8xChunk[16] = (h >> 8) & 0xFF; vp8xChunk[17] = (h >> 16) & 0xFF;
+      bodyParts.push(vp8xChunk);
+    }
+
+    while (offset + 8 <= orig.length) {
+      const fourCC = decoder.decode(orig.slice(offset, offset + 4));
+      const chunkLen = view.getUint32(offset + 4, true);
+      const paddedLen = chunkLen + (chunkLen % 2);
+      const totalLen = 8 + paddedLen;
+      if (offset + totalLen > orig.length) break;
+
+      const chunkSlice = orig.slice(offset, offset + totalLen);
+      if (fourCC === 'VP8X') {
+        chunkSlice[8] = chunkSlice[8] | 0x04;
+        bodyParts.push(chunkSlice);
+      } else if (fourCC !== 'XMP ') {
+        bodyParts.push(chunkSlice);
+      }
+      offset += totalLen;
+    }
+
+    bodyParts.push(xmpChunkHeader, xmpBytes, padByte);
+
+    const payloadSize = 4 + bodyParts.reduce((s, p) => s + p.length, 0);
+    const out = new Uint8Array(8 + payloadSize);
+    out.set(encoder.encode('RIFF'), 0);
+    new DataView(out.buffer).setUint32(4, payloadSize, true);
+    out.set(encoder.encode('WEBP'), 8);
+
+    let pos = 12;
+    for (const p of bodyParts) { out.set(p, pos); pos += p.length; }
+    return out;
+  }
+
+  /**
+   * 6. Universal Image Fallback (TIFF/BMP/GIF/AVIF -> High-Quality JPEG)
+   */
+  function convertImageToJpegBuffer(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth || img.width;
+          canvas.height = img.naturalHeight || img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+          URL.revokeObjectURL(url);
+
+          canvas.toBlob(blob => {
+            if (!blob) return reject(new Error('Canvas conversion failed'));
+            blob.arrayBuffer().then(resolve).catch(reject);
+          }, 'image/jpeg', 0.96);
+        } catch (err) {
+          URL.revokeObjectURL(url);
+          reject(err);
+        }
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Image decode error'));
+      };
+      img.src = url;
+    });
+  }
+
+  /**
+   * Generate & Download Final ZIP Package
+   */
+  generateZipBtn.addEventListener('click', async () => {
+    const includeXmp = document.getElementById('chkXmp').checked;
+    const includeIptc = document.getElementById('chkIptc').checked;
+    const includeUnmatched = document.getElementById('chkIncludeUnmatched').checked;
+
+    const targets = loadedImages.filter(i => Boolean(i.meta) || includeUnmatched);
+    if (targets.length === 0) {
+      showToast('প্রসেস করার মতো কোনো ফাইল নেই!', '⚠️');
+      return;
+    }
+
+    generateZipBtn.disabled = true;
+    const progressSection = document.getElementById('progressSection');
+    const progressLabel = document.getElementById('progressLabel');
+    const progressPercent = document.getElementById('progressPercent');
+    const progressBarFill = document.getElementById('progressBarFill');
+
+    progressSection.classList.remove('hidden');
+    const zip = new JSZip();
+
+    try {
+      for (let i = 0; i < targets.length; i++) {
+        const item = targets[i];
+        const origBuffer = await item.file.arrayBuffer();
+
+        if (item.meta) {
+          let finalBytes;
+          if (item.format === 'JPEG') {
+            finalBytes = embedMetadataIntoJpeg(origBuffer, item.meta, includeXmp, includeIptc);
+          } else if (item.format === 'PNG') {
+            finalBytes = embedMetadataIntoPng(origBuffer, item.meta);
+          } else if (item.format === 'SVG') {
+            finalBytes = embedMetadataIntoSvg(origBuffer, item.meta);
+          } else if (item.format === 'EPS') {
+            finalBytes = embedMetadataIntoEps(origBuffer, item.meta);
+          } else if (item.format === 'WEBP') {
+            finalBytes = await embedMetadataIntoWebp(item.file, origBuffer, item.meta);
+          } else {
+            const jpegBuf = await convertImageToJpegBuffer(item.file);
+            finalBytes = embedMetadataIntoJpeg(jpegBuf, item.meta, includeXmp, includeIptc);
+          }
+          zip.file(item.outputName, finalBytes);
+        } else {
+          zip.file(item.file.name, origBuffer);
+        }
+
+        const pct = Math.round(((i + 1) / targets.length) * 100);
+        progressBarFill.style.width = `${pct}%`;
+        progressPercent.textContent = `${pct}%`;
+        progressLabel.textContent = `প্রসেসিং (${item.format}): ${i + 1} / ${targets.length} (${item.outputName})`;
+
+        if (i % 8 === 0) await new Promise(r => setTimeout(r, 0));
+      }
+
+      progressLabel.textContent = 'ZIP প্যাকেজ তৈরি হচ্ছে...';
+      const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
+
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(zipBlob);
+      a.download = `MultiFormat_Metadata_Embedded_${new Date().toISOString().slice(0, 10)}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      progressLabel.textContent = `✅ সম্পন্ন! ${targets.length} টি ফাইল আসল ফরম্যাটে মেটাডেটাসহ ডাউনলোড হয়েছে।`;
+      showToast(`সফলভাবে ${targets.length} টি ফাইলের ZIP ডাউনলোড হয়েছে!`, '🎉');
+    } catch (err) {
+      console.error(err);
+      showToast('এরর ঘটেছে: ' + err.message, '❌');
+    } finally {
+      generateZipBtn.disabled = false;
+    }
+  });
+
+  /**
+   * Download Sample CSV Template
+   */
+  document.getElementById('downloadSampleCsvBtn').addEventListener('click', () => {
+    const sampleCsv =
+      `Filename,Title,Description,Keywords\n` +
+      `mountain_sunset.jpg,"Golden Sunset Over Misty Mountain Peaks","Breathtaking aerial view of golden sunlight illuminating misty mountain ridges at sunset","mountain, sunset, landscape, nature, mist, golden hour, sky, scenic, outdoor, travel"\n` +
+      `vector_icon.svg,"Minimalist Modern Cloud Computing Vector Icon","Clean geometric flat vector illustration of cloud storage and data transfer technology","cloud, vector, icon, technology, data, network, minimal, modern, digital, storage"\n` +
+      `transparent_logo.png,"Abstract Gradient Wave Logo Design on Transparent Background","Modern fluid gradient wave graphic element isolated on transparent background for branding","logo, wave, gradient, abstract, transparent, branding, modern, graphic, design, colorful"`;
+
+    const blob = new Blob([sampleCsv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'sample_multiformat_metadata.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast('Sample CSV টেমপ্লেট ডাউনলোড হয়েছে।', '📥');
+  });
+
+  /**
+   * Reset All Data
+   */
+  document.getElementById('resetAllBtn').addEventListener('click', () => {
+    loadedImages.forEach(i => { if (i.thumbUrl && i.thumbUrl.startsWith('blob:')) URL.revokeObjectURL(i.thumbUrl); });
+    loadedImages = [];
+    rawCsvRows = [];
+    csvHeaders = [];
+    folderInput.value = '';
+    filesInput.value = '';
+    csvInput.value = '';
+    document.getElementById('imageStatusBadge').innerHTML = '';
+    document.getElementById('csvStatusBadge').innerHTML = '';
+    columnMappingPanel.classList.add('hidden');
+    previewSection.classList.add('hidden');
+    document.getElementById('progressSection').classList.add('hidden');
+    applyCsvMappingToImages();
+    showToast('সব ডেটা রিসেট করা হয়েছে।', '🔄');
+  });
+
+  /**
+   * Multi-Format Diagnostic Self-Test (Tests JPEG, PNG, SVG, and EPS Binary Injection)
+   */
+  document.getElementById('runSelfTestBtn').addEventListener('click', async () => {
+    try {
+      const testMeta = {
+        title: 'Pure Verified Microstock Asset',
+        description: 'Diagnostic verification across JPEG, PNG, SVG, and EPS engines.',
+        keywords: 'verified, microstock, xmp, iptc, pure'
+      };
+
+      // 1. Test JPEG Engine
+      const canvas = document.createElement('canvas');
+      canvas.width = 8; canvas.height = 8;
+      canvas.getContext('2d').fillRect(0, 0, 8, 8);
+      const jpegBlob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.9));
+      const jpegOut = embedMetadataIntoJpeg(await jpegBlob.arrayBuffer(), testMeta, true, true);
+      const jpegStr = new TextDecoder('latin1').decode(jpegOut);
+      const jpegOk = jpegOut[0] === 0xFF && jpegOut[1] === 0xD8 &&
+                     jpegOut[jpegOut.length - 2] === 0xFF && jpegOut[jpegOut.length - 1] === 0xD9 &&
+                     jpegStr.includes('Pure Verified Microstock Asset') && jpegStr.includes('Photoshop 3.0');
+
+      // 2. Test PNG Engine
+      const pngBlob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+      const pngOut = embedMetadataIntoPng(await pngBlob.arrayBuffer(), testMeta);
+      const pngStr = new TextDecoder('latin1').decode(pngOut);
+      const pngOk = pngOut[0] === 137 && pngOut[1] === 80 && pngStr.includes('XML:com.adobe.xmp') && pngStr.includes('Pure Verified Microstock Asset');
+
+      // 3. Test SVG Engine
+      const sampleSvg = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10"/></svg>');
+      const svgOut = embedMetadataIntoSvg(sampleSvg.buffer, testMeta);
+      const svgStr = new TextDecoder('utf-8').decode(svgOut);
+      const svgOk = svgStr.includes('<metadata id="microstock_xmp_metadata">') && svgStr.includes('Pure Verified Microstock Asset');
+
+      // 4. Test EPS Engine
+      const sampleEps = new TextEncoder().encode('%!PS-Adobe-3.0 EPSF-3.0\n%%BoundingBox: 0 0 10 10\n%%EndComments\nnewpath 0 0 moveto showpage');
+      const epsOut = embedMetadataIntoEps(sampleEps.buffer, testMeta);
+      const epsStr = new TextDecoder('latin1').decode(epsOut);
+      const epsOk = epsStr.includes('%ADO_ContainsXMP: MainFirst') && epsStr.includes('Pure Verified Microstock Asset');
+
+      if (jpegOk && pngOk && svgOk && epsOk) {
+        showToast('✅ ৪টি ইঞ্জিনই (JPEG, PNG, SVG, EPS) ১০০% নিখুঁতভাবে পাস করেছে!', '🎉');
+      } else {
+        showToast(`⚠️ টেস্ট রিপোর্ট — JPEG:${jpegOk}, PNG:${pngOk}, SVG:${svgOk}, EPS:${epsOk}`, '⚠️');
+      }
+    } catch (err) {
+      showToast('❌ সিস্টেম টেস্ট এরর: ' + err.message, '❌');
+    }
+  });
+</script>
+</body>
+</html>
