@@ -24,6 +24,19 @@
     ::-webkit-scrollbar-track { background: #0f172a; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    @keyframes rgbTextFlow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .rgb-creator-name {
+      background: linear-gradient(90deg, #ff2a85, #ff7a00, #ffd500, #00e676, #00b0ff, #d500f9, #ff2a85);
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: rgbTextFlow 4s ease infinite;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between">
@@ -53,6 +66,9 @@
       </div>
 
       <div class="flex flex-wrap items-center gap-2.5">
+        <button id="extractCsvModeBtn" class="px-3.5 py-2 rounded-xl bg-purple-950/60 hover:bg-purple-900/80 border border-purple-700/60 text-xs font-semibold text-purple-300 transition flex items-center gap-2 cursor-pointer">
+          <span>📤</span> Extract Metadata to CSV
+        </button>
         <button id="runSelfTestBtn" class="px-3.5 py-2 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-700/60 text-xs font-semibold text-emerald-300 transition flex items-center gap-2 cursor-pointer">
           <span>🧪</span> সিস্টেম টেস্ট করুন
         </button>
@@ -139,6 +155,83 @@
       </div>
     </div>
 
+    <!-- Pro Microstock Studio Toolkit (Bulk Operations, Copyright, SEO Rename, Compliance) -->
+    <div id="proToolkitPanel" class="hidden mt-6 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-800">
+        <div>
+          <h3 class="text-base font-semibold text-white flex items-center gap-2">
+            <span>🛠️</span> Pro Microstock SEO & Bulk Studio
+          </h3>
+          <p class="text-xs text-slate-400">এক ক্লিকে SEO Compliance ফিক্স, Bulk Keyword/Replace, কপিরাইট এবং SEO ফাইল রিনেমিং করুন</p>
+        </div>
+        <button id="autoFixComplianceBtn" class="px-3.5 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-xs font-semibold text-amber-300 transition flex items-center gap-1.5 cursor-pointer">
+          <span>✨</span> Auto-Fix All SEO & Duplicates (50 KW Limit)
+        </button>
+      </div>
+
+      <!-- Row 1: Bulk Find & Replace + Append Keywords -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <!-- Bulk Find & Replace -->
+        <div class="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3.5">
+          <div class="text-xs font-semibold text-slate-300 mb-2">🔍 Bulk Find & Replace (সব টাইটেল, ডেসক্রিপশন ও কিওয়ার্ডে)</div>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <input type="text" id="bulkFindInput" placeholder="খুঁজুন (যেমন: 3D, vector)" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500" />
+            <input type="text" id="bulkReplaceInput" placeholder="পরিবর্তন (খালি রাখলে ডিলিট)" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500" />
+            <button id="applyBulkReplaceBtn" class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold cursor-pointer shrink-0">Apply</button>
+          </div>
+        </div>
+
+        <!-- Bulk Append Common Keywords -->
+        <div class="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3.5">
+          <div class="text-xs font-semibold text-slate-300 mb-2">🏷️ সব ফাইলে কমন কিওয়ার্ড যুক্ত করুন (Comma Separated)</div>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <input type="text" id="bulkAddKwInput" placeholder="যেমন: isolated, modern, background, design" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500" />
+            <select id="bulkKwPosition" class="bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none">
+              <option value="end">শেষে যুক্ত করুন</option>
+              <option value="start">শুরুতে (Top Rank)</option>
+            </select>
+            <button id="applyBulkKwBtn" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold cursor-pointer shrink-0">Add Tags</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2: Author / Copyright / Rating (Saved in Browser) -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-950/60 border border-slate-800/80 rounded-xl p-3.5">
+        <div>
+          <label class="block text-[11px] font-medium text-slate-400 mb-1">👤 Creator / Author Name (Auto-Saved)</label>
+          <input type="text" id="creatorNameInput" value="Arafat Hossain" placeholder="যেমন: Arafat Hossain" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500" />
+        </div>
+        <div>
+          <label class="block text-[11px] font-medium text-slate-400 mb-1">©️ Copyright Notice (Auto-Saved)</label>
+          <input type="text" id="copyrightNoticeInput" placeholder="যেমন: © 2026 Arafat Hossain. All Rights Reserved." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500" />
+        </div>
+        <div>
+          <label class="block text-[11px] font-medium text-slate-400 mb-1">⭐ XMP Rating (Adobe Bridge / Lightroom)</label>
+          <select id="xmpRatingSelect" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500">
+            <option value="">রেটিং ছাড়া (Default)</option>
+            <option value="5">⭐⭐⭐⭐⭐ (5 Stars - Top Pick)</option>
+            <option value="4">⭐⭐⭐⭐ (4 Stars)</option>
+            <option value="3">⭐⭐⭐ (3 Stars)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Row 3: Output Export Toggles -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs">
+        <div class="flex flex-wrap items-center gap-5">
+          <label class="inline-flex items-center gap-2 cursor-pointer text-slate-200 font-medium">
+            <input type="checkbox" id="chkSeoRename" class="rounded bg-slate-800 border-slate-600 text-cyan-500 focus:ring-0">
+            <span>🔤 SEO Title অনুযায়ী ফাইল রিনেম করুন (যেমন: <code class="text-cyan-400">sunset-mountain.jpg</code>)</span>
+          </label>
+          <label class="inline-flex items-center gap-2 cursor-pointer text-slate-200 font-medium">
+            <input type="checkbox" id="chkExportUpdatedCsv" checked class="rounded bg-slate-800 border-slate-600 text-emerald-500 focus:ring-0">
+            <span>📊 ZIP-এর ভেতরে আপডেট হওয়া নতুন CSV ফাইলটিও যুক্ত করুন</span>
+          </label>
+        </div>
+        <div id="complianceSummaryBadge" class="text-xs font-semibold"></div>
+      </div>
+    </div>
+
     <!-- Stats Dashboard -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
@@ -172,6 +265,7 @@
             <option value="all">সবগুলো দেখুন</option>
             <option value="matched">শুধু Matched</option>
             <option value="unmatched">শুধু Unmatched</option>
+            <option value="issues">⚠️ SEO Warning আছে</option>
           </select>
         </div>
       </div>
@@ -180,9 +274,9 @@
         <table class="w-full text-left border-collapse text-sm">
           <thead>
             <tr class="bg-slate-950/60 text-slate-400 text-xs uppercase border-b border-slate-800 sticky top-0">
-              <th class="py-3 px-4">প্রিভিউ ও নাম</th>
+              <th class="py-3 px-4">প্রিভিউ ও আউটপুট নাম</th>
               <th class="py-3 px-4">ফরম্যাট</th>
-              <th class="py-3 px-4">স্ট্যাটাস</th>
+              <th class="py-3 px-4">SEO Compliance</th>
               <th class="py-3 px-4">Title</th>
               <th class="py-3 px-4">Keywords</th>
               <th class="py-3 px-4 text-right">অ্যাকশন</th>
@@ -217,6 +311,13 @@
       <label for="chkIncludeUnmatched" class="cursor-pointer">যেসব ফাইলের সাথে CSV মিলেনি সেগুলোকেও মূল অবস্থায় ZIP-এ যুক্ত করুন</label>
     </div>
   </div>
+
+  <!-- Creator Credit Footer -->
+  <footer class="w-full py-5 border-t border-slate-800/80 bg-slate-950/60 text-center">
+    <p class="text-sm text-slate-400 font-medium tracking-wide">
+      Created by "<span class="rgb-creator-name font-extrabold text-base">Arafat Hossain</span>"
+    </p>
+  </footer>
 
   <!-- Edit Metadata Modal -->
   <div id="editModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -292,6 +393,36 @@
   const mapDescCol = document.getElementById('mapDescCol');
   const mapKeywordsCol = document.getElementById('mapKeywordsCol');
 
+  // Pro Toolkit Controls
+  const proToolkitPanel = document.getElementById('proToolkitPanel');
+  const creatorNameInput = document.getElementById('creatorNameInput');
+  const copyrightNoticeInput = document.getElementById('copyrightNoticeInput');
+  const xmpRatingSelect = document.getElementById('xmpRatingSelect');
+  const chkSeoRename = document.getElementById('chkSeoRename');
+  const chkExportUpdatedCsv = document.getElementById('chkExportUpdatedCsv');
+
+  // Load saved Author/Copyright/Rating preferences from localStorage
+  function loadSavedCreatorPrefs() {
+    try {
+      const savedCreator = localStorage.getItem('ms_creator_name');
+      creatorNameInput.value = savedCreator !== null ? savedCreator : 'Arafat Hossain';
+      copyrightNoticeInput.value = localStorage.getItem('ms_copyright_notice') || '';
+      xmpRatingSelect.value = localStorage.getItem('ms_xmp_rating') || '';
+    } catch (_) {
+      creatorNameInput.value = 'Arafat Hossain';
+    }
+  }
+
+  [creatorNameInput, copyrightNoticeInput, xmpRatingSelect].forEach(el => {
+    el.addEventListener('input', () => {
+      try {
+        localStorage.setItem('ms_creator_name', creatorNameInput.value.trim());
+        localStorage.setItem('ms_copyright_notice', copyrightNoticeInput.value.trim());
+        localStorage.setItem('ms_xmp_rating', xmpRatingSelect.value);
+      } catch (_) {}
+    });
+  });
+
   /**
    * Ensure a completely clean slate on every page load / reload (clears browser bfcache / form state)
    */
@@ -308,6 +439,7 @@
     document.getElementById('imageStatusBadge').innerHTML = '';
     document.getElementById('csvStatusBadge').innerHTML = '';
     columnMappingPanel.classList.add('hidden');
+    proToolkitPanel.classList.add('hidden');
     previewSection.classList.add('hidden');
     document.getElementById('progressSection').classList.add('hidden');
     document.getElementById('statTotalImages').textContent = '0';
@@ -315,6 +447,7 @@
     document.getElementById('statMatched').textContent = '0';
     document.getElementById('statUnmatched').textContent = '0';
     generateZipBtn.disabled = true;
+    loadSavedCreatorPrefs();
   }
 
   window.addEventListener('DOMContentLoaded', clearAllStateOnLoad);
@@ -350,6 +483,25 @@
     return base.replace(/\.(jpe?g|png|webp|svg|eps|ai|tiff?|bmp|gif|avif)$/i, '').trim();
   }
 
+  /**
+   * Detect Asset Format Safely by Extension and MIME Type
+   */
+  function detectAssetFormat(file) {
+    if (!file || !file.name) return null;
+    const ext = file.name.split('.').pop().toLowerCase();
+    const mime = (file.type || '').toLowerCase();
+
+    if (ext === 'jpg' || ext === 'jpeg' || mime === 'image/jpeg') return 'JPEG';
+    if (ext === 'png' || mime === 'image/png') return 'PNG';
+    if (ext === 'svg' || mime === 'image/svg+xml') return 'SVG';
+    if (ext === 'eps' || ext === 'ai' || mime.includes('postscript')) return 'EPS';
+    if (ext === 'webp' || mime === 'image/webp') return 'WEBP';
+    if (['tif', 'tiff', 'bmp', 'gif', 'avif'].includes(ext) || mime.startsWith('image/')) {
+      return 'OTHER_IMAGE';
+    }
+    return null;
+  }
+
   function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str || '';
@@ -367,18 +519,102 @@
   }
 
   /**
-   * Detect Supported File Format
+   * SEO & Microstock Compliance Validator
    */
-  function detectAssetFormat(file) {
-    const name = file.name.toLowerCase();
-    const type = (file.type || '').toLowerCase();
-    if (/\.jpe?g$/i.test(name) || type === 'image/jpeg') return 'JPEG';
-    if (/\.png$/i.test(name) || type === 'image/png') return 'PNG';
-    if (/\.svg$/i.test(name) || type === 'image/svg+xml') return 'SVG';
-    if (/\.eps$/i.test(name) || type === 'application/postscript' || type === 'image/x-eps') return 'EPS';
-    if (/\.webp$/i.test(name) || type === 'image/webp') return 'WEBP';
-    if (/\.(tiff?|bmp|gif|avif|ico)$/i.test(name) || type.startsWith('image/')) return 'OTHER_IMAGE';
-    return null;
+  const BANNED_TRADEMARK_WORDS = [
+    'nike', 'adidas', 'apple', 'iphone', 'ipad', 'macbook', 'samsung', 'sony',
+    'disney', 'marvel', 'batman', 'superman', 'coca-cola', 'cocacola', 'pepsi',
+    'gucci', 'rolex', 'ferrari', 'lamborghini', 'porsche', 'bmw', 'mercedes',
+    'microsoft', 'windows', 'google', 'facebook', 'instagram', 'youtube', 'tiktok',
+    'netflix', 'starbucks', 'mcdonalds', 'lego', 'barbie', 'pokemon', 'nintendo',
+    '4k', '8k', 'hd', 'uhd', 'royalty free', 'royalty-free', 'shutterstock', 'adobe stock'
+  ];
+
+  function analyzeSeoCompliance(meta) {
+    if (!meta) return { hasIssues: false, warnings: [], kwList: [] };
+    const warnings = [];
+    const title = (meta.title || '').trim();
+    const rawKws = (meta.keywords || '').split(',').map(k => k.trim()).filter(Boolean);
+
+    if (!title) {
+      warnings.push('Title খালি আছে');
+    } else if (title.length > 200) {
+      warnings.push(`Title বেশি বড় (${title.length}/200 অক্ষর)`);
+    } else if (title.length > 70) {
+      warnings.push(`Title ৭০+ অক্ষর (${title.length} chars)`);
+    }
+
+    if (rawKws.length > 50) {
+      warnings.push(`৫০টির বেশি Keyword (${rawKws.length} টি)`);
+    } else if (rawKws.length < 5) {
+      warnings.push(`খুব কম Keyword (${rawKws.length} টি)`);
+    }
+
+    const lowerSeen = new Set();
+    let dupCount = 0;
+    rawKws.forEach(k => {
+      const low = k.toLowerCase();
+      if (lowerSeen.has(low)) dupCount++;
+      else lowerSeen.add(low);
+    });
+    if (dupCount > 0) {
+      warnings.push(`${dupCount} টি ডুপ্লিকেট Keyword`);
+    }
+
+    const combinedText = `${title} ${meta.description || ''} ${rawKws.join(' ')}`.toLowerCase();
+    const foundBanned = BANNED_TRADEMARK_WORDS.filter(word => {
+      const rx = new RegExp(`\\b${word.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i');
+      return rx.test(combinedText);
+    });
+    if (foundBanned.length > 0) {
+      warnings.push(`Trademark/Banned: ${foundBanned.slice(0, 3).join(', ')}`);
+    }
+
+    return {
+      hasIssues: warnings.length > 0,
+      warnings,
+      kwList: rawKws
+    };
+  }
+
+  /**
+   * Generate Safe SEO Filename from Title (Handling Duplicates)
+   */
+  function buildSeoFileName(item, usedNamesSet) {
+    const extMatch = item.outputName.match(/(\.[^.]+)$/);
+    const ext = extMatch ? extMatch[1].toLowerCase() : '.jpg';
+    if (!chkSeoRename.checked || !item.meta || !item.meta.title) {
+      return item.outputName;
+    }
+
+    let slug = item.meta.title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .slice(0, 75)
+      .replace(/^-|-$/g, '');
+
+    if (!slug) return item.outputName;
+
+    let candidate = `${slug}${ext}`;
+    let counter = 2;
+    while (usedNamesSet.has(candidate.toLowerCase())) {
+      candidate = `${slug}-${counter}${ext}`;
+      counter++;
+    }
+    usedNamesSet.add(candidate.toLowerCase());
+    return candidate;
+  }
+
+  function getResolvedExportNames() {
+    const used = new Set();
+    const map = new Map();
+    loadedImages.forEach(item => {
+      map.set(item.id, buildSeoFileName(item, used));
+    });
+    return map;
   }
 
   /**
@@ -579,6 +815,7 @@
     document.getElementById('statMatched').textContent = matchedCount;
     document.getElementById('statUnmatched').textContent = loadedImages.length - matchedCount;
 
+    proToolkitPanel.classList.toggle('hidden', loadedImages.length === 0);
     previewSection.classList.toggle('hidden', loadedImages.length === 0);
     generateZipBtn.disabled = matchedCount === 0;
 
@@ -586,18 +823,36 @@
   }
 
   /**
-   * Render Preview Table with Search & Status Filter
+   * Render Preview Table with Search, Status Filter & SEO Compliance Badges
    */
   function renderPreviewTable() {
     const query = (document.getElementById('searchInput').value || '').toLowerCase();
     const filter = document.getElementById('filterStatus').value;
+    const resolvedNames = getResolvedExportNames();
+
+    let totalIssuesCount = 0;
+    loadedImages.forEach(item => {
+      if (item.meta && analyzeSeoCompliance(item.meta).hasIssues) totalIssuesCount++;
+    });
+
+    const compBadge = document.getElementById('complianceSummaryBadge');
+    if (loadedImages.some(i => i.meta)) {
+      compBadge.innerHTML = totalIssuesCount > 0
+        ? `<span class="text-amber-400">⚠️ ${totalIssuesCount} টি ফাইলে SEO/Keyword ওয়ার্নিং আছে</span>`
+        : `<span class="text-emerald-400">✅ সব ফাইল ১০০% Microstock SEO Compliant!</span>`;
+    } else {
+      compBadge.innerHTML = '';
+    }
 
     const filtered = loadedImages.filter(item => {
       const isMatched = Boolean(item.meta);
+      const comp = analyzeSeoCompliance(item.meta);
       if (filter === 'matched' && !isMatched) return false;
       if (filter === 'unmatched' && isMatched) return false;
+      if (filter === 'issues' && (!isMatched || !comp.hasIssues)) return false;
       if (query) {
-        const inName = item.outputName.toLowerCase().includes(query);
+        const exportName = resolvedNames.get(item.id) || item.outputName;
+        const inName = item.outputName.toLowerCase().includes(query) || exportName.toLowerCase().includes(query);
         const inTitle = item.meta && item.meta.title.toLowerCase().includes(query);
         return inName || inTitle;
       }
@@ -616,19 +871,31 @@
     };
 
     previewTableBody.innerHTML = filtered.slice(0, 200).map(item => {
-      const kwCount = item.meta && item.meta.keywords
-        ? item.meta.keywords.split(',').map(k => k.trim()).filter(Boolean).length
-        : 0;
+      const comp = analyzeSeoCompliance(item.meta);
+      const kwCount = comp.kwList.length;
       const fmtLabel = item.format === 'OTHER_IMAGE' ? 'JPG (Conv)' : item.format;
+      const finalName = resolvedNames.get(item.id) || item.outputName;
+      const isRenamed = finalName !== item.outputName;
+
+      let statusHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-800 text-slate-400 border border-slate-700">No CSV</span>`;
+      if (item.meta) {
+        if (comp.hasIssues) {
+          statusHtml = `<span title="${escapeHtml(comp.warnings.join(' | '))}" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/15 text-amber-300 border border-amber-500/30 cursor-help">⚠️ ${escapeHtml(comp.warnings[0])}</span>`;
+        } else {
+          statusHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">✅ SEO Ready</span>`;
+        }
+      }
 
       return `
         <tr class="hover:bg-slate-800/40 transition">
           <td class="py-3 px-4">
             <div class="flex items-center gap-3">
-              <img src="${item.thumbUrl}" alt="" class="w-10 h-10 rounded-lg object-cover bg-slate-800 border border-slate-700 shrink-0" />
+              <img src="${item.thumbUrl}" loading="lazy" alt="" class="w-10 h-10 rounded-lg object-cover bg-slate-800 border border-slate-700 shrink-0" />
               <div class="min-w-0">
-                <div class="font-medium text-slate-200 truncate max-w-[180px]" title="${escapeHtml(item.outputName)}">${escapeHtml(item.outputName)}</div>
-                <div class="text-[11px] text-slate-500">${(item.file.size / 1024).toFixed(1)} KB</div>
+                <div class="font-medium text-slate-200 truncate max-w-[190px]" title="${escapeHtml(finalName)}">${escapeHtml(finalName)}</div>
+                <div class="text-[11px] text-slate-500">
+                  ${isRenamed ? `<span class="text-cyan-400">Orig: ${escapeHtml(item.outputName)}</span> • ` : ''}${(item.file.size / 1024).toFixed(1)} KB
+                </div>
               </div>
             </div>
           </td>
@@ -636,16 +903,13 @@
             <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold border ${badgeColors[item.format] || badgeColors.OTHER_IMAGE}">${fmtLabel}</span>
           </td>
           <td class="py-3 px-4">
-            ${item.meta
-              ? `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">✓ Matched</span>`
-              : `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/15 text-amber-400 border border-amber-500/30">No CSV</span>`
-            }
+            ${statusHtml}
           </td>
-          <td class="py-3 px-4 text-slate-300 max-w-[220px] truncate" title="${item.meta ? escapeHtml(item.meta.title) : ''}">
+          <td class="py-3 px-4 text-slate-300 max-w-[200px] truncate" title="${item.meta ? escapeHtml(item.meta.title) : ''}">
             ${item.meta ? escapeHtml(item.meta.title) : '<span class="text-slate-600">—</span>'}
           </td>
-          <td class="py-3 px-4 text-slate-400 text-xs">
-            ${item.meta ? `${kwCount} keywords` : '—'}
+          <td class="py-3 px-4 text-xs ${kwCount > 50 ? 'text-amber-400 font-bold' : 'text-slate-400'}">
+            ${item.meta ? `${kwCount} / 50` : '—'}
           </td>
           <td class="py-3 px-4 text-right">
             <div class="inline-flex items-center gap-1.5">
@@ -664,6 +928,176 @@
 
   document.getElementById('searchInput').addEventListener('input', renderPreviewTable);
   document.getElementById('filterStatus').addEventListener('change', renderPreviewTable);
+  chkSeoRename.addEventListener('change', renderPreviewTable);
+
+  /**
+   * Pro Toolkit Actions: Auto-Fix Compliance, Bulk Replace, Bulk Add Keywords, Reverse Extract
+   */
+  document.getElementById('autoFixComplianceBtn').addEventListener('click', () => {
+    let fixedFiles = 0;
+    loadedImages.forEach(item => {
+      if (!item.meta) return;
+      let changed = false;
+
+      if (item.meta.title && item.meta.title.length > 200) {
+        item.meta.title = item.meta.title.slice(0, 197).trim() + '...';
+        changed = true;
+      }
+
+      const seen = new Set();
+      const cleanKws = [];
+      (item.meta.keywords || '').split(',').map(k => k.trim()).filter(Boolean).forEach(kw => {
+        const low = kw.toLowerCase();
+        const isBanned = BANNED_TRADEMARK_WORDS.some(b => new RegExp(`\\b${b.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i').test(low));
+        if (!seen.has(low) && !isBanned && cleanKws.length < 50) {
+          seen.add(low);
+          cleanKws.push(kw);
+        }
+      });
+
+      const newKwStr = cleanKws.join(', ');
+      if (newKwStr !== item.meta.keywords) {
+        item.meta.keywords = newKwStr;
+        changed = true;
+      }
+
+      if (changed) {
+        item.meta.manual = true;
+        fixedFiles++;
+      }
+    });
+
+    renderPreviewTable();
+    showToast(fixedFiles > 0 ? `✨ ${fixedFiles} টি ফাইলের ডুপ্লিকেট, লিমিট ও নিষিদ্ধ শব্দ ফিক্স করা হয়েছে!` : 'সব ফাইল ইতিমধ্যেই পরিষ্কার আছে!', '✨');
+  });
+
+  document.getElementById('applyBulkReplaceBtn').addEventListener('click', () => {
+    const findStr = document.getElementById('bulkFindInput').value;
+    const replaceStr = document.getElementById('bulkReplaceInput').value;
+    if (!findStr) {
+      showToast('খোঁজার জন্য একটি শব্দ লিখুন!', '⚠️');
+      return;
+    }
+
+    const escaped = findStr.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const rx = new RegExp(escaped, 'gi');
+    let updatedCount = 0;
+
+    loadedImages.forEach(item => {
+      if (!item.meta) return;
+      const newTitle = item.meta.title.replace(rx, replaceStr).replace(/\s{2,}/g, ' ').trim();
+      const newDesc = item.meta.description.replace(rx, replaceStr).replace(/\s{2,}/g, ' ').trim();
+      const newKw = item.meta.keywords
+        .split(',')
+        .map(k => k.replace(rx, replaceStr).trim())
+        .filter(Boolean)
+        .join(', ');
+
+      if (newTitle !== item.meta.title || newDesc !== item.meta.description || newKw !== item.meta.keywords) {
+        item.meta.title = newTitle;
+        item.meta.description = newDesc;
+        item.meta.keywords = newKw;
+        item.meta.manual = true;
+        updatedCount++;
+      }
+    });
+
+    renderPreviewTable();
+    showToast(`${updatedCount} টি ফাইলে Find & Replace সম্পন্ন হয়েছে!`, '🔍');
+  });
+
+  document.getElementById('applyBulkKwBtn').addEventListener('click', () => {
+    const rawNew = document.getElementById('bulkAddKwInput').value;
+    const position = document.getElementById('bulkKwPosition').value;
+    const newTags = rawNew.split(',').map(k => k.trim()).filter(Boolean);
+    if (newTags.length === 0) {
+      showToast('যুক্ত করার জন্য অন্তত একটি কিওয়ার্ড লিখুন!', '⚠️');
+      return;
+    }
+
+    let updatedCount = 0;
+    loadedImages.forEach(item => {
+      if (!item.meta) return;
+      const existing = item.meta.keywords.split(',').map(k => k.trim()).filter(Boolean);
+      const combined = position === 'start' ? [...newTags, ...existing] : [...existing, ...newTags];
+
+      const seen = new Set();
+      const deduped = [];
+      combined.forEach(kw => {
+        const low = kw.toLowerCase();
+        if (!seen.has(low) && deduped.length < 50) {
+          seen.add(low);
+          deduped.push(kw);
+        }
+      });
+
+      item.meta.keywords = deduped.join(', ');
+      item.meta.manual = true;
+      updatedCount++;
+    });
+
+    document.getElementById('bulkAddKwInput').value = '';
+    renderPreviewTable();
+    showToast(`${updatedCount} টি ফাইলে নতুন কিওয়ার্ড যুক্ত হয়েছে!`, '🏷️');
+  });
+
+  /**
+   * Reverse Mode: Extract Existing XMP/IPTC Metadata from Loaded Files into a CSV Download
+   */
+  document.getElementById('extractCsvModeBtn').addEventListener('click', async () => {
+    if (loadedImages.length === 0) {
+      showToast('আগে ১নং বক্স থেকে কিছু ইমেজ বা ভেক্টর ফাইল লোড করুন!', '⚠️');
+      return;
+    }
+
+    showToast('ফাইলগুলো থেকে বিদ্যমান মেটাডেটা পড়া হচ্ছে...', '⏳');
+    const extractedRows = [];
+
+    for (let idx = 0; idx < loadedImages.length; idx++) {
+      const item = loadedImages[idx];
+      try {
+        const buf = await item.file.arrayBuffer();
+        const text = new TextDecoder('utf-8', { fatal: false }).decode(buf);
+        const xmpMatch = text.match(/<x:xmpmeta[\s\S]*?<\/x:xmpmeta>/);
+
+        let title = '';
+        let description = '';
+        let keywords = '';
+
+        if (xmpMatch) {
+          const parser = new DOMParser();
+          const xmlDoc = parser.parseFromString(xmpMatch[0], 'text/xml');
+          const titleNode = xmlDoc.querySelector('title li') || xmlDoc.getElementsByTagName('dc:title')[0];
+          const descNode = xmlDoc.querySelector('description li') || xmlDoc.getElementsByTagName('dc:description')[0];
+          const kwNodes = xmlDoc.querySelectorAll('subject li');
+
+          title = titleNode ? titleNode.textContent.trim() : '';
+          description = descNode ? descNode.textContent.trim() : '';
+          keywords = Array.from(kwNodes).map(n => n.textContent.trim()).filter(Boolean).join(', ');
+        }
+
+        extractedRows.push({
+          Filename: item.file.name,
+          Title: title,
+          Description: description,
+          Keywords: keywords
+        });
+      } catch (_) {
+        extractedRows.push({ Filename: item.file.name, Title: '', Description: '', Keywords: '' });
+      }
+      if (idx % 15 === 0) await new Promise(r => setTimeout(r, 0));
+    }
+
+    const csvOutput = Papa.unparse(extractedRows);
+    const blob = new Blob([csvOutput], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `extracted_metadata_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast(`✅ ${extractedRows.length} টি ফাইলের মেটাডেটা CSV আকারে এক্সট্র্যাক্ট হয়েছে!`, '📤');
+  });
 
   /**
    * Edit Metadata Modal Handlers
@@ -761,6 +1195,20 @@
     const safeTitle = escapeXml(meta.title);
     const safeDesc = escapeXml(meta.description || meta.title);
 
+    const creator = (creatorNameInput && creatorNameInput.value.trim()) || '';
+    const copyright = (copyrightNoticeInput && copyrightNoticeInput.value.trim()) || '';
+    const rating = (xmpRatingSelect && xmpRatingSelect.value) || '';
+
+    const creatorBlock = creator
+      ? `\n      <dc:creator><rdf:Seq><rdf:li>${escapeXml(creator)}</rdf:li></rdf:Seq></dc:creator>`
+      : '';
+    const copyrightBlock = copyright
+      ? `\n      <dc:rights><rdf:Alt><rdf:li xml:lang="x-default">${escapeXml(copyright)}</rdf:li></rdf:Alt></dc:rights>\n      <xmpRights:Marked>True</xmpRights:Marked>`
+      : '';
+    const ratingBlock = rating
+      ? `\n      <xmp:Rating>${escapeXml(rating)}</xmp:Rating>`
+      : '';
+
     return `<?xpacket begin="\uFEFF" id="W5M0MpCehiHzreSzNTczkc9d"?>
 <x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="Adobe XMP Core 5.6-c140">
   <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
@@ -768,6 +1216,7 @@
       xmlns:dc="http://purl.org/dc/elements/1.1/"
       xmlns:photoshop="http://ns.adobe.com/photoshop/1.0/"
       xmlns:xmp="http://ns.adobe.com/xap/1.0/"
+      xmlns:xmpRights="http://ns.adobe.com/xap/1.0/rights/"
       xmlns:Iptc4xmpCore="http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/">
       <dc:title>
         <rdf:Alt>
@@ -779,7 +1228,7 @@
           <rdf:li xml:lang="x-default">${safeDesc}</rdf:li>
         </rdf:Alt>
       </dc:description>
-      <photoshop:Headline>${safeTitle}</photoshop:Headline>
+      <photoshop:Headline>${safeTitle}</photoshop:Headline>${creatorBlock}${copyrightBlock}${ratingBlock}
       <dc:subject>
         <rdf:Bag>
 ${kwXml}
@@ -815,6 +1264,11 @@ ${kwXml}
     pushIptcTag(2, 5, (meta.title || '').slice(0, 64));           // 2:05 Object Name (Title)
     pushIptcTag(2, 105, (meta.title || '').slice(0, 256));        // 2:105 Headline
     pushIptcTag(2, 120, (meta.description || meta.title || '').slice(0, 2000)); // 2:120 Caption/Abstract
+
+    const creator = (creatorNameInput && creatorNameInput.value.trim()) || '';
+    const copyright = (copyrightNoticeInput && copyrightNoticeInput.value.trim()) || '';
+    if (creator) pushIptcTag(2, 80, creator.slice(0, 32));        // 2:80 By-line (Creator)
+    if (copyright) pushIptcTag(2, 116, copyright.slice(0, 128));  // 2:116 Copyright Notice
 
     const keywords = (meta.keywords || '').split(',').map(k => k.trim()).filter(Boolean);
     keywords.forEach(kw => {
@@ -1216,39 +1670,62 @@ ${kwXml}
 
     progressSection.classList.remove('hidden');
     const zip = new JSZip();
+    const resolvedNames = getResolvedExportNames();
+    const updatedCsvRecords = [];
+    let successCount = 0;
+    let skippedCount = 0;
 
     try {
       for (let i = 0; i < targets.length; i++) {
         const item = targets[i];
         const origBuffer = await item.file.arrayBuffer();
+        const exportFileName = resolvedNames.get(item.id) || item.outputName;
 
-        if (item.meta) {
-          let finalBytes;
-          if (item.format === 'JPEG') {
-            finalBytes = embedMetadataIntoJpeg(origBuffer, item.meta, includeXmp, includeIptc);
-          } else if (item.format === 'PNG') {
-            finalBytes = embedMetadataIntoPng(origBuffer, item.meta);
-          } else if (item.format === 'SVG') {
-            finalBytes = embedMetadataIntoSvg(origBuffer, item.meta);
-          } else if (item.format === 'EPS') {
-            finalBytes = embedMetadataIntoEps(origBuffer, item.meta);
-          } else if (item.format === 'WEBP') {
-            finalBytes = await embedMetadataIntoWebp(item.file, origBuffer, item.meta);
+        try {
+          if (item.meta) {
+            let finalBytes;
+            if (item.format === 'JPEG') {
+              finalBytes = embedMetadataIntoJpeg(origBuffer, item.meta, includeXmp, includeIptc);
+            } else if (item.format === 'PNG') {
+              finalBytes = embedMetadataIntoPng(origBuffer, item.meta);
+            } else if (item.format === 'SVG') {
+              finalBytes = embedMetadataIntoSvg(origBuffer, item.meta);
+            } else if (item.format === 'EPS') {
+              finalBytes = embedMetadataIntoEps(origBuffer, item.meta);
+            } else if (item.format === 'WEBP') {
+              finalBytes = await embedMetadataIntoWebp(item.file, origBuffer, item.meta);
+            } else {
+              const jpegBuf = await convertImageToJpegBuffer(item.file);
+              finalBytes = embedMetadataIntoJpeg(jpegBuf, item.meta, includeXmp, includeIptc);
+            }
+            zip.file(exportFileName, finalBytes);
+            updatedCsvRecords.push({
+              Filename: exportFileName,
+              Title: item.meta.title,
+              Description: item.meta.description,
+              Keywords: item.meta.keywords
+            });
           } else {
-            const jpegBuf = await convertImageToJpegBuffer(item.file);
-            finalBytes = embedMetadataIntoJpeg(jpegBuf, item.meta, includeXmp, includeIptc);
+            zip.file(item.file.name, origBuffer);
           }
-          zip.file(item.outputName, finalBytes);
-        } else {
+          successCount++;
+        } catch (fileErr) {
+          console.warn(`Skipped file ${item.file.name}:`, fileErr);
           zip.file(item.file.name, origBuffer);
+          skippedCount++;
         }
 
         const pct = Math.round(((i + 1) / targets.length) * 100);
         progressBarFill.style.width = `${pct}%`;
         progressPercent.textContent = `${pct}%`;
-        progressLabel.textContent = `প্রসেসিং (${item.format}): ${i + 1} / ${targets.length} (${item.outputName})`;
+        progressLabel.textContent = `প্রসেসিং (${item.format}): ${i + 1} / ${targets.length} (${exportFileName})`;
 
-        if (i % 8 === 0) await new Promise(r => setTimeout(r, 0));
+        if (i % 5 === 0) await new Promise(r => setTimeout(r, 0));
+      }
+
+      if (chkExportUpdatedCsv.checked && updatedCsvRecords.length > 0) {
+        const csvStr = Papa.unparse(updatedCsvRecords);
+        zip.file(`updated_metadata_${new Date().toISOString().slice(0, 10)}.csv`, csvStr);
       }
 
       progressLabel.textContent = 'ZIP প্যাকেজ তৈরি হচ্ছে...';
@@ -1261,8 +1738,8 @@ ${kwXml}
       a.click();
       document.body.removeChild(a);
 
-      progressLabel.textContent = `✅ সম্পন্ন! ${targets.length} টি ফাইল আসল ফরম্যাটে মেটাডেটাসহ ডাউনলোড হয়েছে।`;
-      showToast(`সফলভাবে ${targets.length} টি ফাইলের ZIP ডাউনলোড হয়েছে!`, '🎉');
+      progressLabel.textContent = `✅ সম্পন্ন! ${successCount} টি ফাইল আসল ফরম্যাটে মেটাডেটাসহ ডাউনলোড হয়েছে।`;
+      showToast(skippedCount > 0 ? `সফলভাবে ${successCount} টি ফাইল ZIP হয়েছে (${skippedCount} টি স্কিপড)।` : `সফলভাবে ${successCount} টি ফাইলের ZIP ডাউনলোড হয়েছে!`, '🎉');
     } catch (err) {
       console.error(err);
       showToast('এরর ঘটেছে: ' + err.message, '❌');
@@ -1305,6 +1782,7 @@ ${kwXml}
     document.getElementById('imageStatusBadge').innerHTML = '';
     document.getElementById('csvStatusBadge').innerHTML = '';
     columnMappingPanel.classList.add('hidden');
+    proToolkitPanel.classList.add('hidden');
     previewSection.classList.add('hidden');
     document.getElementById('progressSection').classList.add('hidden');
     applyCsvMappingToImages();
